@@ -1,0 +1,14 @@
+
+spring:
+  application:
+    name: calendar-service
+datasource:
+  url: jdbc:h2:calendar:calendardb
+  driverClassName: org.h2.Driver
+  username: sa
+  password:
+jpa:
+  database-platform: org.hibernate.dialect.H2Dialect
+h2:
+  console:
+    enabled: true

@@ -1,0 +1,27 @@
+<nav class="navbar navbar-expand navbar-dark" style="background-color: #007bff" *ngIf="currentUser && currentUser.email">
+  <div class="navbar-nav">
+    <span class="material-icons-outlined" (click)="logout()" ngbTooltip="logout">
+      logout
+   </span>
+       <span dir="rtl" class="material-icons-outlined" [ngbTooltip]="currentUser.email" style="text-align: right; padding-left: 1750px" >
+      person
+      </span>
+  </div>
+</nav>
+<nav class="navbar navbar-expand navbar-dark" style="background-color: #007bff" *ngIf="currentUser === null || !currentUser.email">
+  <div class="navbar-nav">
+    <span class="material-icons-outlined" (click)="login()" ngbTooltip="login or register">
+      login
+   </span>
+  </div>
+</nav>
+<div class="jumbotron">
+  <div>
+    <div class="row">
+      <div class="col-sm-12">
+        <app-event-message></app-event-message>
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  </div>
+</div>

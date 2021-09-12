@@ -1,0 +1,17 @@
+version: '2.1'
+services:
+  calendar-service:
+    container_name: calendar-service
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    image: open-jdk:11-jdk-alpine
+    ports:
+      - 8080:8080
+  calendar-client:
+    container_name: calendar-client
+    build:
+      context: ./src/main/calendar-client
+      dockerfile: ./Dockerfile
+    ports:
+      - 4200:80

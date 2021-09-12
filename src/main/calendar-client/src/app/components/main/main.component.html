@@ -1,0 +1,486 @@
+<div class="row text-center">
+  <div class="col-md-4">
+    <div class="btn-group">
+      <div
+        (viewDateChange)="closeOpenMonthViewDay()"
+        [(viewDate)]="viewDate"
+        [view]="view"
+        class="btn btn-primary"
+        mwlCalendarPreviousView>
+        Previous
+      </div>
+      <div
+        [(viewDate)]="viewDate"
+        class="btn btn-outline-secondary"
+        mwlCalendarToday>
+        Today
+      </div>
+      <div
+        (viewDateChange)="closeOpenMonthViewDay()"
+        [(viewDate)]="viewDate"
+        [view]="view"
+        class="btn btn-primary"
+        mwlCalendarNextView>
+        Next
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):'en' }}</h3>
+  </div>
+  <div class="col-md-4">
+    <div class="btn-group">
+      <div
+        (click)="setView(CalendarView.Month)"
+        [class.active]="view === CalendarView.Month"
+        class="btn btn-primary"
+      >
+        Month
+      </div>
+      <div
+        (click)="setView(CalendarView.Week)"
+        [class.active]="view === CalendarView.Week"
+        class="btn btn-primary"
+      >
+        Week
+      </div>
+      <div
+        (click)="setView(CalendarView.Day)"
+        [class.active]="view === CalendarView.Day"
+        class="btn btn-primary"
+      >
+        Day
+      </div>
+    </div>
+  </div>
+</div>
+<br/>
+<div [ngSwitch]="view">
+  <mwl-calendar-month-view
+    (dayClicked)="dayClicked($event.day)"
+    (eventClicked)="handleEvent('update', $event.event)"
+    (eventTimesChanged)="eventTimesChanged($event)"
+    *ngSwitchCase="CalendarView.Month"
+    [activeDayIsOpen]="activeDayIsOpen"
+    [events]="events"
+    [refresh]="refresh"
+    [viewDate]="viewDate"
+  >
+  </mwl-calendar-month-view>
+  <mwl-calendar-week-view
+    (eventClicked)="handleEvent('update', $event.event)"
+    (eventTimesChanged)="eventTimesChanged($event)"
+    *ngSwitchCase="CalendarView.Week"
+    [events]="events"
+    [refresh]="refresh"
+    [viewDate]="viewDate"
+  >
+  </mwl-calendar-week-view>
+  <mwl-calendar-day-view
+    (eventClicked)="handleEvent('update', $event.event)"
+    (eventTimesChanged)="eventTimesChanged($event)"
+    *ngSwitchCase="CalendarView.Day"
+    [events]="events"
+    [refresh]="refresh"
+    [viewDate]="viewDate"
+  >
+  </mwl-calendar-day-view>
+</div>
+
+<br/><br/><br/>
+
+<h3>
+  Events
+  <button (click)="addEvent()" [disabled]="!currentUser.email" class="btn btn-primary float-right">
+    New Event
+  </button>
+  <div class="clearfix"></div>
+</h3>
+
+<div class="table-responsive">
+  <table class="table table-bordered">
+    <thead>
+    <tr>
+      <th>Title</th>
+      <th>Starts at</th>
+      <th>Ends at</th>
+      <th></th>
+      <th></th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr *ngFor="let event of events">
+      <td>
+        <input
+          (keyup)="refresh.next()"
+          [(ngModel)]="event.title"
+          class="form-control"
+          type="text"
+          readonly
+        />
+      </td>
+      <td>
+        <input
+          (ngModelChange)="refresh.next()"
+          [(ngModel)]="event.start"
+          [altInput]="true"
+          [convertModelValue]="true"
+          [enableTime]="true"
+          altFormat="F j, Y H:i"
+          class="form-control"
+          dateFormat="Y-m-dTH:i"
+          mwlFlatpickr
+          placeholder="Not set"
+          type="text"
+          disabled
+        />
+      </td>
+      <td>
+        <input
+          (ngModelChange)="refresh.next()"
+          [(ngModel)]="event.end"
+          [altInput]="true"
+          [convertModelValue]="true"
+          [enableTime]="true"
+          altFormat="F j, Y H:i"
+          class="form-control"
+          dateFormat="Y-m-dTH:i"
+          mwlFlatpickr
+          placeholder="Not set"
+          type="text"
+          disabled
+        />
+      </td>
+      <td>
+        <span (click)="handleEvent('remove',event)" class="material-icons-outlined">
+            delete
+        </span>
+      </td>
+      <td>
+        <span (click)="handleEvent('update',event)" class="material-icons-outlined">
+            edit
+        </span>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+<ng-template #createEvent let-close="close">
+  <div class="modal-header" style="background-color: #007bff">
+    <h5 class="modal-title">Add Event</h5>
+    <button (click)="close()" class="close" type="button">
+      <span class="material-icons-outlined">
+       cancel
+      </span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form (ngSubmit)="createNewEvent()" [formGroup]="newEventForm">
+      <div class="form-group">
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="newEventTitle">
+            Title:
+          </label>
+          <div class="col-md-10">
+            <input class="form-control form-control-lg"
+                   formControlName="title"
+                   id="newEventTitle"
+                   type="text"/>
+            <div *ngIf="newEventForm.controls['title'].invalid" class="alert alert-warning">
+              <div *ngIf="newEventForm.controls['title'].errors?.required">
+                Please enter the Title
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="newEventStart">
+            Start Time:
+          </label>
+          <div class="col-md-5">
+            <input [convertModelValue]="true"
+                   [enableTime]="true"
+                   altFormat="F j, Y H:i"
+                   class="form-control"
+                   dateFormat="Y-m-dTH:i"
+                   formControlName="start"
+                   id="newEventStart"
+                   mwlFlatpickr
+                   type="text"/>
+            <div *ngIf="newEventForm.controls['start'].invalid" class="alert alert-warning">
+              <div *ngIf="newEventForm.controls['start'].errors?.required">
+                Please enter the Start Time
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="newEvenEnd">
+            End Time:
+          </label>
+          <div class="col-md-5">
+            <input [convertModelValue]="true"
+                   [enableTime]="true"
+                   altFormat="F j, Y H:i"
+                   class="form-control"
+                   dateFormat="Y-m-dTH:i"
+                   formControlName="end"
+                   id="newEvenEnd"
+                   mwlFlatpickr
+                   placeholder="Not set"
+                   type="text"
+            />
+            <div *ngIf="newEventForm.controls['end'].invalid" class="alert alert-warning">
+              <div *ngIf="newEventForm.controls['end'].errors?.required">
+                Please enter the End Time
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="newEvenStatus">
+            Daily Count:
+          </label>
+          <div class="col-md-3">
+            <input class="form-control"
+                   formControlName="numberOfRepetition"
+                   id="newEvenStatus"
+                   type="text"
+            />
+          </div>
+        </div>
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="newEventColor">
+            Color:
+          </label>
+          <div class="col-md-3">
+            <input class="form-control"
+                   formControlName="color"
+                   id="newEventColor"
+                   type="color"
+            />
+          </div>
+        </div>
+        <div style="text-align: center">
+          <button
+            (click)="close()"
+            [disabled]="!newEventForm.valid"
+            class="btn btn-primary mb-2"
+            type="submit"
+          >
+            Add
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</ng-template>
+
+<ng-template #deleteEvent let-close="close">
+  <div class="modal-header" style="background-color: #007bff">
+    <h5 class="modal-title">Remove Event</h5>
+    <button (click)="close()" class="close" type="button">
+        <span class="material-icons-outlined">
+       cancel
+      </span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form (ngSubmit)="submitRemoveEvent()" [formGroup]="deleteEventForm">
+      <div class="form-group">
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="deleteEventTitle">
+            Title:
+          </label>
+          <div class="col-md-10">
+            <input class="form-control"
+                   formControlName="title"
+                   id="deleteEventTitle"
+                   type="text"
+            />
+          </div>
+        </div>
+
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="deleteEventStart">
+            Start Time:
+          </label>
+          <div class="col-md-5">
+            <input [convertModelValue]="true"
+                   [enableTime]="true"
+                   altFormat="F j, Y H:i"
+                   class="form-control"
+                   dateFormat="Y-m-dTH:i"
+                   formControlName="start"
+                   id="deleteEventStart"
+                   mwlFlatpickr
+                   type="text"
+            />
+          </div>
+        </div>
+
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="deleteEventEnd">
+            End Time:
+          </label>
+          <div class="col-md-5">
+            <input [convertModelValue]="true"
+                   [enableTime]="true"
+                   altFormat="F j, Y H:i"
+                   class="form-control"
+                   dateFormat="Y-m-dTH:i"
+                   formControlName="end"
+                   id="deleteEventEnd"
+                   mwlFlatpickr
+                   placeholder="Not set"
+                   type="text"
+            />
+          </div>
+        </div>
+
+        <div class="row" style="margin: 5px;">
+            <label class="col-md-4 col-form-label" for="deleteFollowingEvents">
+              Remove related events
+            </label>
+          <div class="col-sm-1">
+            <input class="form-check-input"
+                   formControlName="deleteFollowingEvents"
+                   id="deleteFollowingEvents"
+                   type="checkbox"
+            />
+          </div>
+        </div>
+        <div style="text-align: center">
+          <button (click)="close()"
+                  class="btn btn-primary mb-2"
+                  name="Remove Event"
+                  type="submit">
+            Remove
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</ng-template>
+
+<ng-template #updateEvent let-close="close">
+  <div class="modal-header" style="background-color: #007bff">
+    <h5 class="modal-title">Update Event</h5>
+    <button (click)="close()" class="close" type="button">
+        <span class="material-icons-outlined">
+       cancel
+      </span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form (ngSubmit)="submitUpdateEvent()" [formGroup]="updateEventForm">
+      <div class="form-group">
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="updateEventTitle">
+            Title:
+          </label>
+          <div class="col-md-10">
+            <input class="form-control"
+                   formControlName="title"
+                   id="updateEventTitle"
+                   type="text"
+            />
+            <div *ngIf="updateEventForm.controls['title'].invalid" class="alert alert-warning">
+              <div *ngIf="updateEventForm.controls['title'].errors?.required">
+                Title is required.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="updateEventStart">
+            Start Time:
+          </label>
+          <div class="col-md-5">
+            <input [convertModelValue]="true"
+                   [enableTime]="true"
+                   altFormat="F j, Y H:i"
+                   class="form-control"
+                   dateFormat="Y-m-dTH:i"
+                   formControlName="start"
+                   id="updateEventStart"
+                   mwlFlatpickr
+                   type="text"
+            />
+            <div *ngIf="updateEventForm.controls['start'].invalid" class="alert alert-warning">
+              <div *ngIf="updateEventForm.controls['start'].errors?.required">
+                Start time is required.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="updateEventEnd">
+            End Time:
+          </label>
+          <div class="col-md-5">
+            <input [convertModelValue]="true"
+                   [enableTime]="true"
+                   altFormat="F j, Y H:i"
+                   class="form-control"
+                   dateFormat="Y-m-dTH:i"
+                   formControlName="end"
+                   id="updateEventEnd"
+                   mwlFlatpickr
+                   placeholder="Not set"
+                   type="text"/>
+            <div *ngIf="updateEventForm.controls['end'].invalid" class="alert alert-warning">
+              <div *ngIf="updateEventForm.controls['end'].errors?.required">
+                End time is required.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin: 5px;">
+          <label class="col-sm-2 col-form-label" for="updateEventColor">
+            Color:
+          </label>
+          <div class="col-md-3">
+            <input class="form-control"
+                   formControlName="color"
+                   id="updateEventColor"
+                   type="color"
+            />
+          </div>
+        </div>
+        <div class="row" style="margin: 5px;">
+            <label class="col-sm-4 col-form-label" for="updateFollowingEvents">
+              Update following events
+            </label>
+          <div class="col-sm-1">
+            <input class="form-check-input"
+                   formControlName="updateFollowingEvents"
+                   id="updateFollowingEvents"
+                   type="checkbox"
+            />
+          </div>
+        </div>
+        <div style="text-align: center">
+          <button
+            (click)="close()"
+            [disabled]="!updateEventForm.valid"
+            class="btn btn-primary mb-2"
+            type="submit"
+          >
+            Update
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</ng-template>
