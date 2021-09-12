@@ -8,7 +8,7 @@
 		<version>2.4.10</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.fobsolution</groupId>
+	<groupId>com.mahlagha</groupId>
 	<artifactId>calendar-service</artifactId>
 	<version>1.0.0</version>
 	<name>calendar-service</name>
